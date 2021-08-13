@@ -82,7 +82,7 @@ class DroneController(DroneStateMachine, AsyncTaskManagerMixin):
         on_error=DroneState.BOOTSTRAPPING,
         exception=ConnectionFailedTooManyTimes
     )
-    async def bootstrap(self):
+    async def bootstrap(self, test=False):
         """ The boostrap phase is needed to connect the software to the drone via MavLink telemetry.
         This should be the first method to be called """
         self.logger.info("Bootstrapping...")
@@ -102,11 +102,12 @@ class DroneController(DroneStateMachine, AsyncTaskManagerMixin):
                 self.logger.debug("Tried too many times to connect")
                 raise ConnectionFailedTooManyTimes(attempts=self.connection_attempts)
 
-        self.logger.info("Setting defaults")
-        await self.drone.action.set_takeoff_altitude(self.flight_level)
-        await self.drone.action.set_return_to_launch_altitude(self.flight_level)
+        if not test:
+            self.logger.info("Setting defaults")
+            await self.drone.action.set_takeoff_altitude(self.flight_level)
+            await self.drone.action.set_return_to_launch_altitude(self.flight_level)
 
-        await self.update()
+            await self.update()
         self.logger.info("Bootstrapping completed")
 
     @transition(
@@ -232,6 +233,18 @@ class DroneController(DroneStateMachine, AsyncTaskManagerMixin):
         while True:
             await self.fly()
             await self.rest()
+
+
+    async def test(self):
+        await self.bootstrap()
+        can_start_mission = await self.preflight_checks()
+        if not can_start_mission:
+            self.logger.warning("Cannot start the mission because of PRE-FLIGHT checks")
+            return
+
+        await self.drone.arm()
+        await asyncio.sleep(1)
+        await self.drone.disarm()
 
 
 
