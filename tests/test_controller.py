@@ -3,7 +3,7 @@ import asyncio
 import pytest
 
 from aiofsm.exceptions import InvalidStartState
-from core.controller import DroneController, DroneStateMachine, DroneState, AsyncTaskManagerMixin
+from core.controller import DroneController, DroneStateMachine, DroneState
 
 
 def test_drone_state_machine():
@@ -27,17 +27,16 @@ def test_drone_controller_init():
         assert ex_info.value == "__init__() missing 1 required positional argument: 'connection_address'"
 
     # Test simulation __init__
-    c = DroneController(connection_address="test_address")
+    c = DroneController(connection_address="test_address", calibration_folder="../data/camera/test")
     assert c._connection_address == "test_address"
 
     # Test default attributes
-    assert c.flight_level == 5
     assert c.is_simulation
     assert c.running_tasks == []
     assert c.is_bootstrapping
 
     # Test real __init__
-    c = DroneController(connection_address="serial:///dev/test")
+    c = DroneController(connection_address="serial:///dev/test", calibration_folder="../data/camera/test")
     assert c.is_simulation is False
 
 
@@ -51,8 +50,6 @@ async def test_bootstrap_ok(drone_controller: DroneController):
         # Init
         "connect_ok",
         "connection_state_ok",
-        "set_takeoff_altitude_ok",
-        "set_return_to_launch_altitude_ok",
         # Update
         "import_qgroundcontrol_mission_ok",
         "upload_mission_ok"

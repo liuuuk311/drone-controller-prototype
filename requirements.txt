@@ -1,1 +1,4 @@
 mavsdk
+opencv-contrib-python-headless
+numpy
+picamera[array]

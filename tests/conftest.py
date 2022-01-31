@@ -1,6 +1,7 @@
 import pytest
-
+import cv2 as cv
 from core.controller import DroneController
+from precision_landing.tracker import SingleMarkerTracker
 
 
 @pytest.fixture
@@ -162,6 +163,23 @@ def mocked_system(mocked_core, mocked_action, mocked_mission_raw, mocked_telemet
 
 @pytest.fixture
 def drone_controller(monkeypatch, mocked_system):
-    c = DroneController(connection_address="test_address")
+    c = DroneController(connection_address="test_address", calibration_folder="../data/camera/test")
     monkeypatch.setattr(c, "drone", mocked_system)
     return c
+
+
+# ========================= TRACKER =============================
+
+@pytest.fixture
+def mocked_cam():
+    class Cam:
+        def __init__(self, filename):
+            self.filename = filename
+
+        def read(self):
+            return True, cv.imread(filename=self.filename)
+
+        def release(self):
+            pass
+
+    return Cam

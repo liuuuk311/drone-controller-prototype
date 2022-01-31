@@ -1,2 +1,4 @@
+mavsdk
 pytest
 pytest-asyncio
+opencv-contrib-python
